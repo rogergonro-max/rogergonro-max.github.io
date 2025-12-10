@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FinWeb - Educación Financiera para Jóvenes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* === Mantener exactamente tu estilo original === */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111;
+            color: #f0f0f0;
+        }
+        .neon-green { color: #39FF14; }
+        .neon-blue { color: #00FFFF; }
+        .card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(57, 255, 20, 0.2);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            border-color: #39FF14;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
+            transform: translateY(-5px);
+        }
+        .btn-neon {
+            background: transparent;
+            border: 2px solid #39FF14;
+            color: #39FF14;
+            transition: all 0.3s ease;
+        }
+        .btn-neon:hover {
+            background: rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .section-divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #39FF14, #00FFFF, transparent);
+        }
+
+        /* ===== Quiz specific styles (match look & feel) ===== */
+        .quiz-card {
+            background: rgba(10,10,10,0.6);
+            border: 1px solid rgba(57,255,20,0.12);
+            padding: 1.2rem;
+            border-radius: 12px;
+        }
+        .option {
+            display: block;
+            padding: .6rem .8rem;
+            border-radius: 8px;
+            margin-bottom: .6rem;
+            border: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background .15s, box-shadow .15s, transform .08s;
+            background: rgba(255,255,255,0.01);
+        }
+        .option:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .option input { margin-right: .6rem; accent-color: #39FF14; }
+        .option.selected { background: rgba(57,255,20,0.06); border-color: rgba(57,255,20,0.18); }
+        .option.correct { background: rgba(57,255,20,0.08); border-color: rgba(57,255,20,0.25); }
+        .option.wrong { background: rgba(255,60,60,0.06); border-color: rgba(255,60,60,0.18); }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #39FF14, #00FFFF);
+            width: 0%;
+            transition: width .35s ease;
+        }
+
+        /* Results review */
+        .review-row { padding: .6rem .8rem; border-radius: 8px; margin-bottom:.5rem; }
+        .review-correct { background: rgba(57,255,20,0.06); border-left: 4px solid #39FF14; }
+        .review-wrong { background: rgba(255,60,60,0.05); border-left: 4px solid rgba(255,60,60,0.7); }
+
+        /* Video thumbnail styles */
+        .video-thumb {
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: #0b0b0b;
+        }
+        .video-thumb img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .video-thumb .play-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.45);
+            padding: 12px;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,0.06);
+        }
+        .video-thumb .caption {
+            padding: 10px;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+
+        /* Explanation box shown after answering */
+        .explicacion-box {
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(57,255,20,0.06);
+            border-left: 4px solid #39FF14;
+            border-radius: 10px;
+            color: #e6ffe6;
+        }
+
+        /* Responsive small tweaks */
+        @media (max-width:640px){
+            .quiz-controls { flex-direction: column-reverse; gap:.6rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- =========== NAVBAR (se mantiene igual) =========== -->
+    <header class="py-6 px-8 bg-black/80 sticky top-0 z-50 border-b border-gray-800">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-bold">
+                <span class="neon-green">Fin</span><span class="neon-blue">Web</span>
+            </h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#presupuesto" class="hover:text-cyan-300">Presupuesto</a></li>
+                    <li><a href="#creditos" class="hover:text-cyan-300">Créditos</a></li>
+                    <li><a href="#activos" class="hover:text-cyan-300">Activos</a></li>
+                    <li><a href="#inflacion" class="hover:text-cyan-300">Inflación</a></li>
+                    <li><a href="#sat" class="hover:text-cyan-300">SAT</a></li>
+                    <li><a href="#quiz" class="hover:text-cyan-300">Quiz</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- =========== MAIN CONTENT (tu código original) =========== -->
+    <main class="container mx-auto px-8 py-12">
+        <!-- Hero -->
+        <section class="text-center mb-20">
+            <h2 class="text-5xl font-bold mb-6 neon-blue">Educación Financiera Joven</h2>
+            <p class="text-xl max-w-3xl mx-auto text-gray-300">
+                Aprende a manejar tu dinero de forma inteligente y divertida. Aquí encontrarás consejos, ejemplos y videos sobre los temas más importantes de tus finanzas personales.
+            </p>
+        </section>
+
+        <hr class="section-divider my-16">
+
+<!-- Presupuesto -->
+<section id="presupuesto" class="mb-20">
+    <div class="flex items-center mb-8">
+        <i data-feather="dollar-sign" class="neon-green mr-4"></i>
+        <h2 class="text-3xl font-bold">Presupuesto Personal</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div class="card p-6 rounded-lg">
+            <h3 class="text-2xl font-semibold mb-4 neon-blue">¿Qué es un presupuesto?</h3>
+            <p class="text-gray-300 mb-4">Un presupuesto es tu mapa financiero: te permite saber a dónde va tu dinero y cómo administrarlo mejor.</p>
+            <ul class="space-y-3 mb-4">
+                <li><span class="neon-green">•</span> <strong>Necesarios:</strong> renta, comida, transporte, servicios básicos</li>
+                <li><span class="neon-green">•</span> <strong>Innecesarios:</strong> apps, cafés, moda o gastos impulsivos</li>
+            </ul>
+            <p class="text-gray-300">Consejo: aplica la <span class="neon-blue">regla 50-30-20</span> (50% necesidades, 30% gustos, 20% ahorro).</p>
+            <h4 class="text-xl font-semibold mb-3 neon-green mt-6">Gastos hormiga</h4>
+            <p class="text-gray-300">Pequeños gastos diarios que suman: café, snacks, apps. Lleva un registro por una semana y calcula cuánto podrías ahorrar.</p>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="video-thumb" data-video-id="2bByDbjQT9g" id="thumb-presupuesto">
+                <img src="https://img.youtube.com/vi/2bByDbjQT9g/hqdefault.jpg" alt="Miniatura presupuesto">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">Presupuesto para principiantes — Haz clic para reproducir</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider my-16">
+
+<!-- Crédito y Deudas -->
+<section id="creditos" class="mb-20">
+    <div class="flex items-center mb-8">
+        <i data-feather="credit-card" class="neon-green mr-4"></i>
+        <h2 class="text-3xl font-bold">Créditos y Deudas</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div class="card p-4 rounded-lg">
+            <div class="video-thumb" data-video-id="Zzjtzgm4WDE" id="thumb-credito">
+                <img src="https://img.youtube.com/vi/Zzjtzgm4WDE/hqdefault.jpg" alt="Miniatura credito">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">Cómo usar bien tu crédito — Haz clic para reproducir</div>
+            </div>
+        </div>
+        <div class="card p-6 rounded-lg">
+            <h3 class="text-2xl font-semibold mb-4 neon-blue">Entiende tus deudas</h3>
+            <p class="text-gray-300 mb-4">El crédito puede ayudarte a crecer, pero mal usado te puede hundir. Evita gastar más de lo que ganas.</p>
+            <p class="text-gray-300">
+                <strong class="neon-green">Regla básica:</strong> no uses más del 30% de tu límite de crédito.
+            </p>
+            <div class="video-thumb mt-4" data-video-id="7k1D4dCtkW0" id="thumb-deudas">
+                <img src="https://img.youtube.com/vi/7k1D4dCtkW0/hqdefault.jpg" alt="Miniatura deudas">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">Evita el endeudamiento — Haz clic para reproducir</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider my-16">
+
+<!-- Activos y Pasivos -->
+<section id="activos" class="mb-20">
+    <div class="flex items-center mb-8">
+        <i data-feather="trending-up" class="neon-green mr-4"></i>
+        <h2 class="text-3xl font-bold">Activos y Pasivos</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div class="card p-6 rounded-lg">
+            <h3 class="text-2xl font-semibold mb-4 neon-blue">Activos vs Pasivos</h3>
+            <p class="text-gray-300 mb-4"><strong class="neon-green">Activos:</strong> generan dinero (negocios, inversiones, ahorros).</p>
+            <p class="text-gray-300"><strong class="neon-blue">Pasivos:</strong> consumen dinero (deudas, autos, gastos innecesarios).</p>
+            <div class="bg-gray-900/50 p-4 rounded border border-gray-800 mb-4">
+                <p class="font-medium neon-blue mb-2">Ejemplo real:</p>
+                <p class="text-gray-300">Un auto para Uber puede ser activo; el mismo auto solo para uso personal suele ser pasivo.</p>
+            </div>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="video-thumb" data-video-id="8iTbJdwXXro" id="thumb-activos">
+                <img src="https://img.youtube.com/vi/8iTbJdwXXro/hqdefault.jpg" alt="Miniatura activos">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">Activos y Pasivos — Haz clic para reproducir</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider my-16">
+
+<!-- Inflación -->
+<section id="inflacion" class="mb-20">
+    <div class="flex items-center mb-8">
+        <i data-feather="bar-chart-2" class="neon-green mr-4"></i>
+        <h2 class="text-3xl font-bold">Inflación</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div class="card p-6 rounded-lg">
+            <h3 class="text-2xl font-semibold mb-4 neon-blue">¿Qué es la inflación?</h3>
+            <p class="text-gray-300 mb-4">Es el aumento general de los precios con el tiempo. El dinero guardado pierde valor si no crece.</p>
+            <p class="text-gray-300">Protege tu dinero: <span class="neon-green">ahorra, compara precios e invierte inteligentemente.</span></p>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="video-thumb" data-video-id="TOVvFXR3jA8" id="thumb-inflacion">
+                <img src="https://img.youtube.com/vi/TOVvFXR3jA8/hqdefault.jpg" alt="Miniatura inflacion">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">Cómo la inflación afecta tu dinero — Haz clic para reproducir</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider my-16">
+
+<!-- SAT -->
+<section id="sat" class="mb-20">
+    <div class="flex items-center mb-8">
+        <i data-feather="file-text" class="neon-green mr-4"></i>
+        <h2 class="text-3xl font-bold">SAT y Obligaciones Básicas</h2>
+    </div>
+    <div class="grid md:grid-cols-2 gap-8">
+        <div class="card p-6 rounded-lg">
+            <h3 class="text-2xl font-semibold mb-4 neon-blue">SAT para principiantes</h3>
+            <p class="text-gray-300 mb-4">El SAT administra los impuestos en México. Todo joven con ingresos debe conocer sus obligaciones fiscales.</p>
+            <p class="text-gray-300"><span class="neon-green">RFC:</span> tu identificación fiscal. Trámitalo gratis en sat.gob.mx</p>
+        </div>
+        <div class="card p-4 rounded-lg">
+            <div class="video-thumb" data-video-id="u6RKcDDL220" id="thumb-sat">
+                <img src="https://img.youtube.com/vi/u6RKcDDL220/hqdefault.jpg" alt="Miniatura SAT">
+                <div class="play-badge">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </div>
+                <div class="caption">SAT explicado fácil — Haz clic para reproducir</div>
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- ================= QUIZ (SECCIÓN AGREGADA) ================= -->
+        <hr class="section-divider my-16">
+
+        <section id="quiz" class="mb-20">
+            <div class="flex items-center mb-8">
+                <i data-feather="award" class="neon-green mr-4"></i>
+                <h2 class="text-3xl font-bold">Cuestionario Financiero</h2>
+            </div>
+
+            <!-- Quiz container -->
+            <div class="card p-6 rounded-lg quiz-card">
+                <!-- Header: progress -->
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold neon-blue" id="quiz-title">Pregunta</h3>
+                        <div class="text-sm text-gray-300">Pregunta <span id="q-number">1</span> / <span id="q-total">15</span></div>
+                    </div>
+                    <div style="width:240px">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question area -->
+                <div id="quiz-body">
+                    <!-- JS will inject question & options here -->
+                </div>
+
+                <!-- Controls -->
+                <div class="mt-6 flex justify-between quiz-controls">
+                    <button id="prevBtn" class="btn-neon px-4 py-2 rounded-lg" disabled>
+                        <i data-feather="arrow-left" class="inline mr-2"></i>Anterior
+                    </button>
+
+                    <div class="flex gap-3">
+                        <button id="showAnswerBtn" class="btn-neon px-4 py-2 rounded-lg" style="display:none;">Mostrar respuesta</button>
+                        <button id="nextBtn" class="btn-neon px-4 py-2 rounded-lg">Siguiente <i data-feather="arrow-right" class="inline ml-2"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results area (hidden until finish) -->
+            <div id="results" class="mt-8 hidden">
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold neon-blue">Resultados</h3>
+                    <p class="mt-2 text-gray-300">Tu puntuación: <span id="final-score" class="neon-green text-lg font-bold"></span> / <span id="final-total">15</span></p>
+                    <div id="final-message" class="mt-3 text-gray-300"></div>
+
+                    <hr class="my-4" />
+
+                    <h4 class="text-lg neon-blue mb-2">Revisión</h4>
+                    <div id="review-list"></div>
+
+                    <div class="mt-4 flex gap-3">
+                        <button id="restartBtn" class="btn-neon px-4 py-2 rounded-lg">Volver a intentar</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="bg-black/80 py-8 border-t border-gray-800 text-center">
+        <p class="text-gray-400">© 2025 FinWeb - Educación Financiera para Jóvenes.</p>
+        <p class="text-gray-500 text-sm mt-2">Página educativa sin fines de lucro.</p>
+    </footer>
+
+    <!-- =========== QUIZ DATA (PARTE 1: preguntas + explicaciones) =========== -->
+ <!-- Modal -->
+<div id="modal-video" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+    <div class="relative w-11/12 md:w-3/4 lg:w-1/2 bg-gray-900 rounded-lg shadow-lg p-4">
+        <button id="close-video" class="absolute top-2 right-2 text-white text-2xl font-bold">&times;</button>
+        <h3 id="video-title" class="text-white text-xl font-semibold mb-4"></h3>
+        <div class="w-full aspect-video">
+            <iframe id="video-frame" class="w-full h-full rounded" src="" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
+    </div>
+</div>
+
+<script>
+feather.replace();
+
+// ====== Preguntas del quiz ======
+const QUESTIONS = [
+    { q: "¿Qué es un presupuesto?", a: ["Un documento para anotar gastos y organizar el dinero.", "Un registro de calificaciones.", "Un ahorro obligatorio del gobierno."], correct: 0, explicacion: "Un presupuesto es la herramienta para organizar ingresos y gastos y evitar sorpresas." },
+    { q: "¿Por qué es importante hacer un presupuesto?", a: ["Para gastar sin controlar.", "Para organizar tu dinero y evitar deudas.", "Para pagar más impuestos."], correct: 1, explicacion: "Organizar tu dinero te ayuda a cubrir lo necesario y ahorrar para metas, evitando deudas." },
+    { q: "¿Cuál es un gasto necesario?", a: ["Ropa de marca.", "Comida y transporte para la escuela o trabajo.", "Salidas semanales a restaurantes."], correct: 1, explicacion: "Gastos necesarios son los que permiten vivir y trabajar/estudiar: alimentación y transporte." },
+    { q: "¿Cuál es un gasto innecesario?", a: ["Pagar servicios básicos.", "Comprar medicamentos.", "Comprar cosas impulsivamente."], correct: 2, explicacion: "Compras por impulso suelen no aportar valor a largo plazo y consumen tu presupuesto." },
+    { q: "¿Qué significa tener crédito?", a: ["Que el banco te regala dinero.", "Que puedes usar dinero prestado y pagarlo después.", "Que no tienes que pagar intereses nunca."], correct: 1, explicacion: "El crédito es dinero prestado que debes devolver con o sin intereses, según el acuerdo." },
+    { q: "¿Qué pasa si te endeudas demasiado?", a: ["Tu historial mejora.", "Te pueden cobrar intereses altos y perder control financiero.", "El banco te da más créditos."], correct: 1, explicacion: "Endeudarte en exceso genera intereses y reduce tu capacidad de pago, afectando tu estabilidad." },
+    { q: "¿Qué es usar una tarjeta de crédito responsablemente?", a: ["Pagar solo el mínimo siempre.", "Gastar más de lo que ganas.", "Pagar a tiempo y no comprar más de lo que puedes pagar."], correct: 2, explicacion: "Pagar a tiempo y no sobrepasar tu capacidad evita intereses y mejora tu historial." },
+    { q: "¿Qué es un activo?", a: ["Algo que te genera dinero.", "Algo que solo gasta energía.", "Algo que siempre es caro."], correct: 0, explicacion: "Un activo pone dinero en tu bolsillo: inversiones, negocios, rentas, etc." },
+    { q: "¿Cuál de los siguientes es un activo?", a: ["Una inversión que genera ganancias.", "Una deuda atrasada.", "Un gasto por antojo."], correct: 0, explicacion: "Una inversión que rinde es un activo porque puede generar ingresos o valor." },
+    { q: "¿Qué es un pasivo?", a: ["Algo que te hace ganar dinero.", "Algo que consume tu dinero.", "Algo que guardas como colección."], correct: 1, explicacion: "Un pasivo es cualquier gasto o deuda que reduce tu dinero disponible." },
+    { q: "¿Qué es la inflación?", a: ["Cuando los precios bajan mágicamente.", "Cuando el dinero aumenta solo.", "Cuando los precios suben y el dinero vale menos."], correct: 2, explicacion: "La inflación hace que los precios suban con el tiempo y tu dinero pierda poder de compra." },
+    { q: "¿Cómo afecta la inflación al dinero guardado?", a: ["Vale menos con el tiempo.", "Se convierte en dólares.", "Aumenta sin esfuerzo."], correct: 0, explicacion: "Si el dinero no crece con inversiones, la inflación reduce su valor real." },
+    { q: "¿Qué es el SAT?", a: ["Una tienda de ahorro.", "La institución encargada de los impuestos en México.", "Una empresa de telefonía."], correct: 1, explicacion: "El SAT es el organismo que administra y recauda impuestos en México." },
+    { q: "¿Cuál trámite básico debe conocer un joven?", a: ["Solicitar RFC y tener su firma electrónica.", "Cómo pedir un aumento.", "Comprar criptomonedas."], correct: 0, explicacion: "El RFC y la firma electrónica son trámites básicos para trabajar formalmente y declarar impuestos." },
+    { q: "¿Para qué sirven los impuestos?", a: ["Para financiar servicios públicos como educación, salud e infraestructura.", "Para que el gobierno ahorre por gusto.", "Para subir los precios."], correct: 0, explicacion: "Los impuestos financian servicios y obras públicas que benefician a la sociedad." }
+];
+
+// ====== Variables del quiz ======
+let current = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+const total = QUESTIONS.length;
+
+const qNumberEl = document.getElementById("q-number");
+const qTotalEl = document.getElementById("q-total");
+const quizBody = document.getElementById("quiz-body");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressFill = document.getElementById("progress-fill");
+const resultsEl = document.getElementById("results");
+const finalScoreEl = document.getElementById("final-score");
+const finalTotalEl = document.getElementById("final-total");
+const finalMessageEl = document.getElementById("final-message");
+const reviewListEl = document.getElementById("review-list");
+const restartBtn = document.getElementById("restartBtn");
+const showAnswerBtn = document.getElementById("showAnswerBtn");
+
+qTotalEl.textContent = total;
+finalTotalEl.textContent = total;
+
+// ====== Renderizar pregunta ======
+function renderQuestion() {
+    const item = QUESTIONS[current];
+    qNumberEl.textContent = current + 1;
+
+    let html = `<h3 class="text-lg font-semibold neon-blue mb-3">${item.q}</h3><div id="options">`;
+    item.a.forEach((opt, i) => {
+        const checked = answers[current] === i ? "checked" : "";
+        html += `<label class="option ${answers[current] === i ? 'selected' : ''}" data-index="${i}">
+                    <input type="radio" name="opt" value="${i}" ${checked} /> ${opt}
+                 </label>`;
+    });
+    html += `</div><div id="explicacion-container"></div>`;
+    quizBody.innerHTML = html;
+
+    const pct = Math.round((current / total) * 100);
+    progressFill.style.width = pct + "%";
+
+    prevBtn.disabled = current === 0;
+    nextBtn.textContent = current === total - 1 ? "Terminar" : "Siguiente";
+
+    document.querySelectorAll("#options .option").forEach(label => {
+        label.addEventListener("click", () => {
+            const idx = Number(label.dataset.index);
+            document.querySelectorAll("#options .option").forEach(l => l.classList.remove("selected"));
+            label.classList.add("selected");
+            label.querySelector("input").checked = true;
+            answers[current] = idx;
+            nextBtn.disabled = false;
+            showAnswerBtn.style.display = "inline-block";
+        });
+    });
+
+    nextBtn.disabled = answers[current] === null;
+    showAnswerBtn.style.display = answers[current] === null ? "none" : "inline-block";
+    document.getElementById("explicacion-container").innerHTML = "";
+}
+
+// ====== Navegación ======
+prevBtn.addEventListener("click", () => {
+    if (current > 0) {
+        current--;
+        renderQuestion();
+        progressFill.style.width = Math.round((current / total) * 100) + "%";
+    }
+});
+
+nextBtn.addEventListener("click", () => {
+    if (answers[current] === null) return;
+    if (current === total - 1) { finishQuiz(); return; }
+    current++;
+    renderQuestion();
+    progressFill.style.width = Math.round((current / total) * 100) + "%";
+});
+
+// ====== Mostrar respuesta ======
+showAnswerBtn.addEventListener("click", () => {
+    const correctIndex = QUESTIONS[current].correct;
+    document.querySelectorAll("#options .option").forEach(label => {
+        const idx = Number(label.dataset.index);
+        label.classList.remove("correct", "wrong");
+        if (idx === correctIndex) label.classList.add("correct");
+        else if (answers[current] === idx && idx !== correctIndex) label.classList.add("wrong");
+    });
+    document.getElementById("explicacion-container").innerHTML = `<div class="explicacion-box">${QUESTIONS[current].explicacion}</div>`;
+});
+
+// ====== Terminar quiz ======
+function finishQuiz() {
+    let score = 0;
+    QUESTIONS.forEach((q,i) => { if(answers[i] === q.correct) score++; });
+    finalScoreEl.textContent = score;
+
+    const pct = Math.round((score / total) * 100);
+    finalMessageEl.textContent = pct >= 90 ? "¡Excelente! Tienes muy buen manejo de conceptos básicos."
+                                : pct >= 60 ? "Bien — buen conocimiento, pero puedes mejorar con práctica."
+                                : "Sigue estudiando — repasa las secciones y vuelve a intentar.";
+
+    reviewListEl.innerHTML = "";
+    QUESTIONS.forEach((q,i) => {
+        const user = answers[i];
+        const correct = q.correct;
+        const row = document.createElement("div");
+        row.className = "review-row " + (user===correct ? "review-correct" : "review-wrong");
+        row.innerHTML = `<div class="font-semibold">${i+1}. ${q.q}</div>
+                         <div class="text-gray-300 mt-1">Tu respuesta: <strong>${user===null ? 'Sin responder' : q.a[user]}</strong></div>
+                         <div class="text-gray-300 mt-1">Respuesta correcta: <strong>${q.a[correct]}</strong></div>
+                         <div class="text-gray-300 mt-2"><em>Explicación:</em> ${q.explicacion}</div>`;
+        reviewListEl.appendChild(row);
+    });
+
+    resultsEl.classList.remove("hidden");
+    document.getElementById("quiz").scrollIntoView({behavior:"smooth"});
+    resultsEl.scrollIntoView({behavior:"smooth"});
+}
+
+// ====== Reiniciar quiz ======
+restartBtn.addEventListener("click", () => {
+    current = 0;
+    answers = new Array(total).fill(null);
+    resultsEl.classList.add("hidden");
+    renderQuestion();
+    progressFill.style.width = "0%";
+    showAnswerBtn.style.display = "none";
+    document.getElementById("quiz").scrollIntoView({behavior:"smooth"});
+});
+
+// ====== Video Data limpio ======
+const videos = {
+    "2bByDbjQT9g": {title:"Presupuesto para principiantes", cleanUrl:"https://www.youtube.com/embed/2bByDbjQT9g"},
+    "Zzjtzgm4WDE": {title:"Cómo usar bien tu crédito", cleanUrl:"https://www.youtube.com/embed/Zzjtzgm4WDE"},
+    "7k1D4dCtkW0": {title:"Evita el endeudamiento", cleanUrl:"https://www.youtube.com/embed/7k1D4dCtkW0"},
+    "8iTbJdwXXro": {title:"Activos y Pasivos", cleanUrl:"https://www.youtube.com/embed/8iTbJdwXXro"},
+    "TOVvFXR3jA8": {title:"Cómo la inflación afecta tu dinero", cleanUrl:"https://www.youtube.com/embed/TOVvFXR3jA8"},
+    "u6RKcDDL220": {title:"SAT explicado fácil", cleanUrl:"https://www.youtube.com/embed/u6RKcDDL220"}
+};
+
+// ====== Inicializar quiz y videos ======
+(function init() {
+    renderQuestion();
+    if(resultsEl) resultsEl.classList.add("hidden");
+
+    const modal = document.getElementById("modal-video");
+    const iframe = document.getElementById("video-frame");
+    const titleEl = document.getElementById("video-title");
+    const closeBtn = document.getElementById("close-video");
+
+    document.querySelectorAll(".video-thumb").forEach(thumb => {
+        thumb.addEventListener("click", () => {
+            const id = thumb.dataset.videoId;
+            const info = videos[id];
+            if(!info){ alert("Video no encontrado 😢"); return; }
+            iframe.src = info.cleanUrl;
+            titleEl.textContent = info.title;
+            modal.classList.remove("hidden");
+
+            // fallback si iframe falla
+            iframe.onerror = () => { window.open(`https://www.youtube.com/watch?v=${id}`,"_blank"); iframe.src=""; modal.classList.add("hidden"); };
+        });
+    });
+
+    closeBtn.addEventListener("click", () => { modal.classList.add("hidden"); iframe.src=""; });
+
+    document.addEventListener('keydown', (e)=>{
+        if(!document.getElementById('quiz')) return;
+        if(e.key==='ArrowRight' && !nextBtn.disabled) nextBtn.click();
+        if(e.key==='ArrowLeft' && !prevBtn.disabled) prevBtn.click();
+    });
+})();
+
+// ====== Progreso por respuestas ======
+function updateProgressByAnswers() {
+    const answeredCount = answers.filter(a => a!==null).length;
+    progressFill.style.width = Math.round((answeredCount/total)*100)+"%";
+}
+
+document.addEventListener('change', e=>{
+    if(e.target && e.target.name==='opt'){
+        updateProgressByAnswers();
+        showAnswerBtn.style.display="inline-block";
+    }
+});
+</script>
+
+</body>
+</html>
